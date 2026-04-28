@@ -12,9 +12,9 @@ import axios from 'axios';
 const HYDRANTS = {
   type: 'FeatureCollection',
   features: [
-    { type: 'Feature', geometry: { type: 'Point', coordinates: [76.6551, 12.3051] }, properties: { name: 'Palace Hydrant' } },
-    { type: 'Feature', geometry: { type: 'Point', coordinates: [76.6570, 12.3075] }, properties: { name: 'Muni Office Hydrant' } },
-    { type: 'Feature', geometry: { type: 'Point', coordinates: [76.6510, 12.3040] }, properties: { name: 'West Gate' } }
+    { type: 'Feature', geometry: { type: 'Point', coordinates: [77.5946, 12.9716] }, properties: { name: 'Bangalore Palace Hydrant' } },
+    { type: 'Feature', geometry: { type: 'Point', coordinates: [77.5960, 12.9730] }, properties: { name: 'Muni Office Hydrant' } },
+    { type: 'Feature', geometry: { type: 'Point', coordinates: [77.5920, 12.9700] }, properties: { name: 'West Gate' } }
   ]
 };
 
@@ -23,7 +23,7 @@ const MOCK_AQI = {
   features: Array.from({ length: 30 }, () => ({
     type: 'Feature',
     properties: { aqi: Math.random() * 200 },
-    geometry: { type: 'Point', coordinates: [76.64 + Math.random() * 0.04, 12.29 + Math.random() * 0.04] }
+    geometry: { type: 'Point', coordinates: [77.58 + Math.random() * 0.04, 12.96 + Math.random() * 0.04] }
   }))
 };
 
@@ -165,7 +165,7 @@ const App = () => {
           }
         ]
       },
-      center: [76.6551, 12.3051],
+      center: [77.5946, 12.9716],
       zoom: 16,
       pitch: 55,
       antialias: true
@@ -299,8 +299,8 @@ const App = () => {
           el.style.borderRadius = '50%';
           el.style.boxShadow = `0 0 10px ${isAbmEnabled ? '#ff00ff' : '#00ffff'}`;
           
-          const lng = 76.65 + (Math.random() * 0.02 - 0.01);
-          const lat = 12.30 + (Math.random() * 0.02 - 0.01);
+          const lng = 77.5946 + (Math.random() * 0.02 - 0.01);
+          const lat = 12.9716 + (Math.random() * 0.02 - 0.01);
           const marker = new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map.current);
           trafficMarkers.current.push({ marker, lng, lat, dLng: (Math.random()-0.5)*0.0005, dLat: (Math.random()-0.5)*0.0005 });
         }
