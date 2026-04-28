@@ -99,6 +99,12 @@ export default function AdminDashboard() {
   const [placedAssets, setPlacedAssets] = useState([]);
   const [scorecard, setScorecard] = useState({ economic: 65, social: 70, environmental: 55 });
 
+  // God Mode State
+  const [showGodMode, setShowGodMode] = useState(false);
+  const [isGridLocked, setIsGridLocked] = useState(false);
+  const [isRainy, setIsRainy] = useState(false);
+  const [smogLevel, setSmogLevel] = useState(0.1);
+
   const ASSET_TEMPLATES = {
     'Skyscraper': { height: 60, color: '#3c4043', impacts: { economic: 15, social: 5, environmental: -10 }, icon: <Building2 size={24}/> },
     'Urban Park': { height: 2, color: '#00ff9d', impacts: { economic: -5, social: 15, environmental: 25 }, icon: <Leaf size={24}/> },
@@ -271,6 +277,10 @@ export default function AdminDashboard() {
           );
           if (dist < 0.002) effectiveSpeed *= 0.3;
         }
+
+        if (isGridLocked) effectiveSpeed = 0;
+        if (isRainy) effectiveSpeed *= 0.6;
+
         progress += effectiveSpeed;
         if (progress >= 1) { 
           progress = 0; 
@@ -288,7 +298,7 @@ export default function AdminDashboard() {
     };
     requestRef = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(requestRef);
-  }, [demolishedId, selectedBuilding]);
+  }, [demolishedId, selectedBuilding, isGridLocked, isRainy]);
 
   const agentLayer = new ScatterplotLayer({
     id: 'agent-layer',
@@ -582,6 +592,9 @@ export default function AdminDashboard() {
       </motion.div>
 
       <div className="view-actions">
+        <button className={`view-btn neo-btn ${showGodMode ? 'active' : ''}`} onClick={() => setShowGodMode(!showGodMode)}>
+          <Settings2 size={24} /><span>COMMAND OVERRIDE</span>
+        </button>
         <button className={`view-btn neo-btn ${isXrayEnabled ? 'active' : ''}`} onClick={() => setIsXrayEnabled(!isXrayEnabled)}>
           <Eye size={24} /><span>X-RAY VISION</span>
         </button>
@@ -592,6 +605,71 @@ export default function AdminDashboard() {
           <LogOut size={24} /><span>TERMINATE SESSION</span>
         </button>
       </div>
+
+      <AnimatePresence>
+        {showGodMode && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 30 }}
+            className="god-mode-panel glass-panel"
+          >
+            <div className="overlay-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div className="pulse-dot warning" />
+                <h3 style={{ fontSize: '0.9rem', letterSpacing: '4px', fontWeight: 900 }}>COMMAND_OVERRIDE_V4</h3>
+              </div>
+              <button className="logout-btn" onClick={() => setShowGodMode(false)}><X size={20}/></button>
+            </div>
+
+            <div className="override-content">
+              <div className="control-group">
+                <div className="control-label">
+                  <Activity size={18} />
+                  <span>GRID PARALYSIS</span>
+                </div>
+                <button 
+                  className={`toggle-sm ${isGridLocked ? 'on' : ''}`} 
+                  onClick={() => setIsGridLocked(!isGridLocked)} 
+                />
+              </div>
+
+              <div className="control-group">
+                <div className="control-label">
+                  <CloudRain size={18} />
+                  <span>ATMOSPHERIC RAIN</span>
+                </div>
+                <button 
+                  className={`toggle-sm ${isRainy ? 'on' : ''}`} 
+                  onClick={() => setIsRainy(!isRainy)} 
+                />
+              </div>
+
+              <div className="control-group slider">
+                <div className="control-label">
+                  <Wind size={18} />
+                  <span>SMOG DENSITY: {(smogLevel * 100).toFixed(0)}%</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="1" 
+                  step="0.1" 
+                  value={smogLevel} 
+                  onChange={e => setSmogLevel(Number(e.target.value))} 
+                  className="flood-slider"
+                />
+              </div>
+            </div>
+
+            <div className="panel-footer" style={{ border: 'none', padding: 0, marginTop: '2rem' }}>
+              <div style={{ fontSize: '0.6rem', color: 'var(--warning)', fontWeight: 800 }}>
+                WARNING: OVERRIDE BYPASSES STANDARD URBAN PROTOCOLS
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
