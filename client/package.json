@@ -13,6 +13,7 @@
     "@deck.gl/geo-layers": "^9.0.0",
     "@deck.gl/layers": "^9.0.0",
     "@deck.gl/react": "^9.0.0",
+    "@supabase/supabase-js": "^2.105.1",
     "axios": "^1.7.9",
     "deck.gl": "^9.0.0",
     "framer-motion": "^11.5.0",
