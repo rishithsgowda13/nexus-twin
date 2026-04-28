@@ -111,11 +111,45 @@ body {
 .panel-header {
   padding: 24px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 16px;
   border-bottom: 1px solid var(--border-light);
-  cursor: pointer;
   background: rgba(255,255,255,0.5);
+}
+
+.header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.mode-switcher {
+  display: flex;
+  background: rgba(0,0,0,0.05);
+  border-radius: 8px;
+  padding: 4px;
+  width: 100%;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.mode-btn.active {
+  background: #fff;
+  color: var(--blue);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .icon-main { color: var(--blue); filter: drop-shadow(0 2px 4px rgba(0,97,255,0.2)); }
@@ -606,4 +640,87 @@ body {
   .view-actions { right: 16px; top: 100px; }
   .search-container { top: 20px; }
   .tab-btn span { display: none; }
+}
+
+/* ====================== ADVANCED FEATURES ====================== */
+
+/* Atmospheric Weather */
+.weather-overlay {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 50;
+  background: rgba(0, 20, 40, 0.15);
+  background-image: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+  background-size: 100% 20px;
+  animation: rain 0.3s linear infinite;
+}
+@keyframes rain {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100vh; }
+}
+
+/* AI Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: #fff;
+  width: 500px;
+  max-width: 90%;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.modal-header h3 { color: var(--blue); display: flex; align-items: center; gap: 8px; }
+.close-btn { background: none; border: none; cursor: pointer; color: #999; }
+
+.ai-chat-area {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  height: 200px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  border: 1px solid #eee;
+}
+
+.ai-input-group {
+  display: flex;
+  gap: 8px;
+}
+.ai-input-group input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-family: inherit;
+}
+.ai-input-group button {
+  padding: 12px 20px;
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
 }
