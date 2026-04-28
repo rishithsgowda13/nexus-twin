@@ -4,7 +4,7 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { 
   Search, Loader2, MapPin, Layers, History, Eye, Map as MapIcon, 
-  MessageSquare, Camera, Terminal, Globe, Send, LogOut, Leaf, ShieldAlert
+  MessageSquare, Camera, Terminal, Globe, Send, LogOut, Leaf, ShieldAlert, X
 } from 'lucide-react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -78,11 +78,33 @@ const UserDashboard = () => {
   const [sentimentData, setSentimentData] = useState(null);
   const [isSentimentLoading, setIsSentimentLoading] = useState(false);
   const [showReportingHint, setShowReportingHint] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifBar, setShowNotifBar] = useState(false);
+  const [latestNotif, setLatestNotif] = useState(null);
+
+  useEffect(() => {
+    const fetchNotifs = async () => {
+      try {
+        const res = await axios.get('http://localhost:3001/api/notifications');
+        if (res.data.length > 0) {
+          const newest = res.data[0];
+          if (!latestNotif || newest.id !== latestNotif.id) {
+            setLatestNotif(newest);
+            setNotifications(res.data);
+            setShowNotifBar(true);
+          }
+        }
+      } catch (err) { console.error("Notif fetch failed", err); }
+    };
+    fetchNotifs();
+    const interval = setInterval(fetchNotifs, 5000);
+    return () => clearInterval(interval);
+  }, [latestNotif]);
 
   const [viewState, setViewState] = useState({
-    longitude: 77.5873,
-    latitude: 13.1287,
-    zoom: 15,
+    longitude: 77.5912,
+    latitude: 12.9797,
+    zoom: 14,
     pitch: 55,
     bearing: 0
   });
@@ -103,8 +125,8 @@ const UserDashboard = () => {
         },
         layers: [
           { id: 'background', type: 'background', paint: { 'background-color': '#0a0b10' } },
-          { id: 'satellite-tiles', type: 'raster', source: 'google-satellite', layout: { visibility: 'visible' } },
-          { id: 'hybrid-tiles', type: 'raster', source: 'google-hybrid', layout: { visibility: 'none' } },
+          { id: 'hybrid-tiles', type: 'raster', source: 'google-hybrid', layout: { visibility: 'visible' } },
+          { id: 'satellite-tiles', type: 'raster', source: 'google-satellite', layout: { visibility: 'none' } },
           { id: 'street-tiles', type: 'raster', source: 'google-roads', layout: { visibility: 'none' } },
           {
             id: 'utility-pipes',
@@ -126,17 +148,17 @@ const UserDashboard = () => {
             type: 'fill-extrusion',
             source: 'buildings',
             paint: {
-              'fill-extrusion-color': '#e0e0e0',
+              'fill-extrusion-color': '#f1f3f4',
               'fill-extrusion-height': ['coalesce', ['get', 'height'], 15],
               'fill-extrusion-base': 0,
-              'fill-extrusion-opacity': 0.8
+              'fill-extrusion-opacity': 0.9
             }
           }
         ]
       },
-      center: [77.5873, 13.1287],
-      zoom: 15.5,
-      pitch: 65,
+      center: [77.5912, 12.9797],
+      zoom: 14,
+      pitch: 45,
       antialias: true
     });
 
@@ -229,9 +251,9 @@ const UserDashboard = () => {
     
     safeSetPaint('3d-buildings', 'fill-extrusion-color', [
       'case',
-      ['==', ['get', 'id'], selectedBuilding?.id || ''], '#00f2ff',
+      ['==', ['get', 'id'], selectedBuilding?.id || ''], '#2563eb',
       ['<', ['%', ['get', 'id'], 15], Number(floodLevel)], '#0061ff',
-      isXrayEnabled ? '#1a1c23' : (isGridLocked ? '#050608' : (isSat || isHybrid ? '#2a2d35' : '#e0e0e0'))
+      isXrayEnabled ? '#e2e8f0' : (isSat || isHybrid ? '#2a2d35' : '#f1f5f9')
     ]);
   }, [isXrayEnabled, currentStyle, mapLoaded, isStyleReady, selectedBuilding, isGridLocked, floodLevel]);
 
@@ -259,6 +281,32 @@ const UserDashboard = () => {
 
   return (
     <div className="app-root">
+      {/* REAL-TIME POLICY NOTIFICATION */}
+      <AnimatePresence>
+        {showNotifBar && latestNotif && (
+          <motion.div 
+            initial={{ x: 300, opacity: 0 }} 
+            animate={{ x: 0, opacity: 1 }} 
+            exit={{ x: 300, opacity: 0 }}
+            className="widget"
+            style={{ position: 'fixed', top: '1.5rem', right: '1.5rem', width: '320px', zIndex: 1000, borderLeft: '4px solid var(--accent)', padding: '1rem', background: 'rgba(255,255,255,0.95)' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.6rem', color: 'var(--accent)', fontWeight: 900, letterSpacing: '1.5px' }}>NEW POLICY BROADCAST</span>
+              <button onClick={() => setShowNotifBar(false)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><X size={14} /></button>
+            </div>
+            <h4 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '0.5rem', color: '#fff' }}>{latestNotif.policy}</h4>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px' }}>
+              <div><strong style={{ color: 'var(--accent)' }}>COST:</strong><br/>{latestNotif.price}</div>
+              <div><strong style={{ color: 'var(--accent)' }}>ZONE:</strong><br/>{latestNotif.location}</div>
+              <div><strong style={{ color: 'var(--accent)' }}>TIME:</strong><br/>{latestNotif.duration}</div>
+              <div><strong style={{ color: 'var(--accent)' }}>ROI:</strong><br/>{latestNotif.prediction}</div>
+            </div>
+            <p style={{ fontSize: '0.7rem', marginTop: '0.75rem', color: '#cbd5e1', fontStyle: 'italic', lineHeight: '1.4' }}>"{latestNotif.purpose}"</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ATMOSPHERIC ENGINE */}
       <div className={`atm-overlay atm-smog`} />
       <div className={`atm-overlay atm-rain`} style={{ display: isRainy ? 'block' : 'none' }} />
@@ -289,89 +337,75 @@ const UserDashboard = () => {
       )}
 
       <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="search-container">
-        <div className="search-box glass-panel">
+        <div className="search-box">
           <Search size={22} color="var(--accent)" />
-          <input className="search-field" placeholder="Search Bengaluru Hub..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={handleSearch} />
+          <input className="search-field" placeholder="Search Bengaluru Hub..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={handleSearch} style={{ color: 'var(--text-primary)' }} />
           {isSearching && <Loader2 className="spin" size={20} color="var(--accent)" />}
         </div>
       </motion.div>
 
-      <div className={`side-panel ${isCollapsed ? 'collapsed' : ''}`}>
-        <button className="collapse-toggle left" onClick={() => setIsCollapsed(!isCollapsed)}>
-          {isCollapsed ? '→' : '←'}
-        </button>
-
+      <div className="side-panel">
+        <div className="scanline" />
         {/* IDENTITY WIDGET */}
-        <div className="widget">
-          <div className="panel-header">
-            <div className="header-icon-wrap">
-              <Globe size={36} color="var(--accent)" />
-            </div>
-            <div className="header-text">
-              <h2 style={{ fontSize: '1.2rem', letterSpacing: '1px' }}>CITIZEN NEXUS</h2>
-              <span style={{ fontSize: '0.6rem', color: 'var(--success)', fontWeight: 900 }}>PUBLIC_ACCESS_CORE</span>
-            </div>
+        <div className="widget" style={{ padding: '0.75rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(255,255,255,0.95)', borderBottom: '1px solid var(--glass-border)' }}>
+          <Globe size={24} color="var(--accent)" />
+          <div className="header-text">
+            <h2 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '1px' }}>CITIZEN NEXUS</h2>
+            <span style={{ fontSize: '0.5rem', color: 'var(--success)', fontWeight: 900 }}>PUBLIC_CORE_v4.0</span>
           </div>
         </div>
 
-        {/* NAVIGATION WIDGET */}
-        <div className="widget">
-          <div className="panel-tabs">
-            {[
-              { id: 'social', icon: Globe },
-              { id: 'eco', icon: Leaf },
-              { id: 'crisis', icon: ShieldAlert },
-              { id: 'heritage', icon: History }
-            ].map(t => (
-              <button key={t.id} className={`tab-btn ${activeTab === t.id ? 'active' : ''}`} onClick={() => setActiveTab(t.id)}>
-                <t.icon size={16} />
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* CITIZEN FEATURES */}
+        <div className="widget content-widget" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+          <div className="scroll-area" style={{ flex: 1, padding: '1rem' }}>
+            
+            {/* 1. SOCIAL MOOD */}
+            <div className="panel-section" style={{ marginBottom: '2rem' }}>
+              <span className="section-label" style={{ color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Terminal size={14} /> COMMUNITY SENTIMENT
+              </span>
+              <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(0,242,255,0.02)', borderRadius: '12px', border: '1px solid var(--accent-glass)' }}>
+                <p style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Real-time analysis of city-wide mood and public discourse.</p>
+                <button className="action-btn" onClick={handleFetchSentiment} disabled={isSentimentLoading}>
+                  {isSentimentLoading ? <Loader2 className="spin" size={16} /> : 'ANALYZE COMMUNITY MOOD'}
+                </button>
+              </div>
+            </div>
 
-        {/* CONTENT WIDGET */}
-        <div className="widget content-widget">
-          <div className="scroll-area">
+            {/* 2. ECO HEALTH */}
+            <div className="panel-section" style={{ marginBottom: '2rem' }}>
+              <span className="section-label" style={{ color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Leaf size={14} /> ENVIRONMENTAL TELEMETRY
+              </span>
+              <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
+                <div className="toggle-row"><span>AIR_QUALITY_INDEX (AQI)</span><button className={`toggle-sm ${aqiEnabled ? 'on' : ''}`} onClick={() => setAqiEnabled(!aqiEnabled)} /></div>
+                <div className="toggle-row" style={{ marginTop: '1rem' }}><span>VEGETATION_DENSITY (NDVI)</span><button className={`toggle-sm ${greenEnabled ? 'on' : ''}`} onClick={() => setGreenEnabled(!greenEnabled)} /></div>
+              </div>
+            </div>
+
+            {/* 3. PUBLIC SAFETY */}
+            <div className="panel-section" style={{ marginBottom: '2rem' }}>
+              <span className="section-label" style={{ color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <ShieldAlert size={14} /> PUBLIC SAFETY MODEL
+              </span>
+              <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(239,68,68,0.05)', borderRadius: '12px', border: '1px solid rgba(239,68,68,0.1)' }}>
+                <label className="section-label" style={{ fontSize: '0.6rem', color: 'var(--danger)' }}>FLOOD_RISK_THRESHOLD: {floodLevel}M</label>
+                <input type="range" min="0" max="15" value={floodLevel} onChange={e => setFloodLevel(Number(e.target.value))} className="flood-slider" style={{ background: 'rgba(239,68,68,0.2)' }} />
+                <div className="toggle-row" style={{ marginTop: '1rem' }}><span>PRECIPITATION_SIM</span><button className={`toggle-sm ${isRainy ? 'on' : ''}`} onClick={() => setIsRainy(!isRainy)} /></div>
+              </div>
+            </div>
+
+            {/* 4. HERITAGE TIMELINE */}
             <div className="panel-section">
-              {activeTab === 'social' && (
-                <div className="social-panel">
-                  <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', marginBottom: '1.5rem', fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                    Visualizing real-time citizen sentiment across Bengaluru wards.
-                  </div>
-                  <button className="action-btn" onClick={handleFetchSentiment} disabled={isSentimentLoading} style={{ marginBottom: '1rem' }}>
-                    {isSentimentLoading ? <Loader2 className="spin" size={20} /> : 'EXPLORE SENTIMENT'}
-                  </button>
-                  <button className="action-btn" onClick={() => setShowReportingHint(true)}>REPORT ISSUE</button>
-                </div>
-              )}
-
-              {activeTab === 'eco' && (
-                <div className="control-group">
-                  <span className="section-label">ENVIRONMENTAL HEALTH</span>
-                  <div className="toggle-row"><span>AIR QUALITY INDEX</span><button className={`toggle-sm ${aqiEnabled ? 'on' : ''}`} onClick={() => setAqiEnabled(!aqiEnabled)} /></div>
-                  <div className="toggle-row"><span>VEGETATION DENSITY</span><button className={`toggle-sm ${greenEnabled ? 'on' : ''}`} onClick={() => setGreenEnabled(!greenEnabled)} /></div>
-                </div>
-              )}
-
-              {activeTab === 'crisis' && (
-                <div className="control-group">
-                  <label className="section-label">FLOOD MODEL: {floodLevel}M</label>
-                  <input type="range" min="0" max="15" value={floodLevel} onChange={e => setFloodLevel(Number(e.target.value))} className="flood-slider" />
-                  <div className="toggle-row" style={{ marginTop: '1.5rem' }}>
-                    <span>PRECIPITATION SIM</span>
-                    <button className={`toggle-sm ${isRainy ? 'on' : ''}`} onClick={() => setIsRainy(!isRainy)} />
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'heritage' && (
-                <div className="control-group">
-                  <label className="section-label">TIMELINE: {timelineYear}</label>
-                  <input type="range" min="1920" max="2024" step="10" value={timelineYear} onChange={e => setTimelineYear(Number(e.target.value))} className="flood-slider" />
-                </div>
-              )}
+              <span className="section-label" style={{ color: 'var(--warning)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <History size={14} /> BENGALURU LEGACY_TRACK
+              </span>
+              <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(245,158,11,0.02)', borderRadius: '12px', border: '1px solid rgba(245,158,11,0.1)' }}>
+                <label className="section-label" style={{ fontSize: '0.6rem', color: 'var(--warning)' }}>CHRONOLOGICAL_YEAR: {timelineYear}</label>
+                <input type="range" min="1920" max="2024" step="10" value={timelineYear} onChange={e => setTimelineYear(Number(e.target.value))} className="flood-slider" style={{ background: 'rgba(245,158,11,0.2)' }} />
+              </div>
             </div>
+
           </div>
         </div>
       </div>
