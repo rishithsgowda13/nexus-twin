@@ -1,11 +1,14 @@
 {
-  "name": "mysuru-digital-twin-integrated",
+  "name": "bengaluru-nexus-integrated",
   "version": "1.0.0",
   "scripts": {
-    "start": "cd server && node index.js",
-    "dev": "cd client && npm run dev",
+    "install-all": "npm install && cd client && npm install && cd ../server && npm install",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && node index.js",
+    "dev:client": "cd client && npm run dev",
     "build": "cd client && npm run build",
-    "install:all": "npm install && cd server && npm install && cd ../client && npm install"
+    "start": "cd server && node index.js",
+    "integrated": "npm run build && npm start"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

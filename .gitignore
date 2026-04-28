@@ -1,33 +1,83 @@
-# Dependencies
+# --- BENGALURU NEXUS GITIGNORE ---
+
+# Dependency Directories
 node_modules/
+jspm_packages/
 .pnp
 .pnp.js
 
-# Testing
-coverage/
-
-# Production
+# Next.js Build & Runtime
+.next/
+out/
+build/
 dist/
+.vercel
 
-# Misc
-.DS_Store
+# Environment Variables (CRITICAL: DO NOT COMMIT)
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+*.env.local
 
-# Logs
+# Logs & Diagnostic Reports
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+# Runtime Data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Caches
+.cache/
+.npm
+.eslintcache
+.stylelintcache
+.node_repl_history
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# OS Specific
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDEs
+.vscode/
 .idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# Python (ABM / Scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+.venv
+venv/
+ENV/
+env/
+
+# AI / Antigravity Caches
+.gemini/
+.antigravity/
+
+# GIS Data (Optional: ignore large local files)
+# data/bengaluru_buildings.json
+# data/bengaluru_infrastructure.json
+# data/bengaluru_utilities.json
