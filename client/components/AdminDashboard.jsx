@@ -112,6 +112,17 @@ const AdminDashboard = () => {
   const [isGridLocked, setIsGridLocked] = useState(false);
   const [showGodMode, setShowGodMode] = useState(false);
   const [showReportingHint, setShowReportingHint] = useState(false);
+  const [isSentimentLoading, setIsSentimentLoading] = useState(false);
+  const [policyForm, setPolicyForm] = useState({ policy: '', price: '', location: '', purpose: '', prediction: '', duration: '' });
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [sentimentEnabled, setSentimentEnabled] = useState(false);
+  const [sentimentData, setSentimentData] = useState(null);
+  const [advisorQuery, setAdvisorQuery] = useState('');
+  const [advisorLog, setAdvisorLog] = useState([]);
+  const [isAdvisorLoading, setIsAdvisorLoading] = useState(false);
+  const [stormIntensity, setStormIntensity] = useState(5);
+  const [isPredicting, setIsPredicting] = useState(false);
+  const [predictiveData, setPredictiveData] = useState(null);
   
   // --- NEW ADVANCED FEATURES STATES ---
   const [timeHorizon, setTimeHorizon] = useState('present'); // past, present, future
@@ -309,7 +320,7 @@ const AdminDashboard = () => {
 
         // Atmospheric impact on speed
         if (isRainy) effectiveSpeed *= 0.6;
-        if (isGridLocked && !godMode) effectiveSpeed = 0; // Total paralysis (unless God Mode active)
+        if (isGridLocked) effectiveSpeed = 0; // Total paralysis
 
         progress += effectiveSpeed;
         if (progress >= 1) { 
@@ -811,9 +822,97 @@ const AdminDashboard = () => {
             </button>
           ))}
         </div>
-
+        <div className="dock-section">
+          <button className={`dock-btn ${showGodMode ? 'active' : ''}`} onClick={() => setShowGodMode(!showGodMode)}>
+            <Settings2 size={18} /><span>GOD MODE</span>
+          </button>
+          <button className={`dock-btn ${isXrayEnabled ? 'active' : ''}`} onClick={() => setIsXrayEnabled(!isXrayEnabled)}>
+            <Eye size={18} /><span>X-RAY</span>
+          </button>
+          <button className="dock-btn" onClick={() => {
+              const styles = ['satellite', 'hybrid', 'streets'];
+              const nextIndex = (styles.indexOf(currentStyle) + 1) % styles.length;
+              setCurrentStyle(styles[nextIndex]);
+            }}>
+            <Layers size={18} /><span>{currentStyle.toUpperCase()}</span>
+          </button>
+          <button className="dock-btn danger" onClick={handleLogout} style={{ color: 'var(--danger)' }}>
+            <LogOut size={18} /><span>EXIT</span>
+          </button>
         </div>
       </div>
+
+      {/* PREMIUM GOD MODE HUD */}
+      <AnimatePresence>
+        {showGodMode && (
+          <motion.div 
+            initial={{ opacity: 0, x: 50, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, x: 50, filter: 'blur(10px)' }}
+            className="feature-overlay god-mode-hud"
+            style={{ 
+              position: 'fixed',
+              right: '2rem', 
+              top: '2rem', 
+              width: '320px', 
+              zIndex: 3000,
+            }}
+          >
+            <div className="overlay-widget" style={{ background: 'rgba(2, 6, 23, 0.95)', border: '1px solid var(--accent)', padding: '2rem', borderRadius: '24px', position: 'relative', overflow: 'hidden' }}>
+              <div className="scanline" style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(0deg, transparent, rgba(0,242,255,0.03) 1px, transparent 2px)', pointerEvents: 'none' }} />
+              
+              <div className="overlay-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <ShieldAlert size={24} color="var(--accent)" />
+                  <div>
+                    <h3 style={{ fontSize: '0.8rem', letterSpacing: '3px', fontWeight: 900, color: '#fff', margin: 0 }}>COMMAND OVERRIDE</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.2rem' }}>
+                      <div className="status-dot online" style={{ width: '6px', height: '6px', background: 'var(--success)', borderRadius: '50%', boxShadow: '0 0 8px var(--success)' }} />
+                      <span style={{ fontSize: '0.5rem', color: 'var(--success)', fontWeight: 900, letterSpacing: '1px' }}>SESSION_LVL_ROOT</span>
+                    </div>
+                  </div>
+                </div>
+                <button className="close-overlay" onClick={() => setShowGodMode(false)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><X size={18} /></button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div className="toggle-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <Activity size={16} color="var(--danger)" />
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)' }}>GLOBAL GRID LOCK</span>
+                  </div>
+                  <button className={`toggle-sm ${isGridLocked ? 'on' : ''}`} onClick={() => setIsGridLocked(!isGridLocked)} style={{ width: '36px', height: '20px', borderRadius: '10px', background: isGridLocked ? 'var(--danger)' : 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer', transition: '0.3s' }} />
+                </div>
+
+                <div className="toggle-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <CloudRain size={16} color="var(--accent)" />
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)' }}>ATMOSPHERIC RAIN</span>
+                  </div>
+                  <button className={`toggle-sm ${isRainy ? 'on' : ''}`} onClick={() => setIsRainy(!isRainy)} style={{ width: '36px', height: '20px', borderRadius: '10px', background: isRainy ? 'var(--accent)' : 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer', transition: '0.3s' }} />
+                </div>
+
+                <div style={{ marginTop: '0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <Wind size={16} color="var(--text-secondary)" />
+                      <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)' }}>SMOG DENSITY</span>
+                    </div>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--accent)', fontWeight: 900 }}>{(smogLevel * 100).toFixed(0)}%</span>
+                  </div>
+                  <input type="range" min="0" max="0.8" step="0.1" value={smogLevel} onChange={e => setSmogLevel(Number(e.target.value))} className="flood-slider" style={{ width: '100%' }} />
+                </div>
+              </div>
+
+              <div style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--glass-border)', textAlign: 'center' }}>
+                <div style={{ fontSize: '0.6rem', color: 'var(--warning)', letterSpacing: '2px', fontWeight: 800, animation: 'pulse 2s infinite' }}>
+                  SYSTEM BYPASS ACTIVE
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* FEATURE 8: EXPLAINABLE AI INFO PANEL */}
       <AnimatePresence>
