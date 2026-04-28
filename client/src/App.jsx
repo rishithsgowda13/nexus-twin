@@ -32,6 +32,7 @@ const App = () => {
   const map = useRef(null);
   
   // --- STATE ---
+  const [systemMode, setSystemMode] = useState('admin');
   const [activeTab, setActiveTab] = useState('missions');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -42,6 +43,9 @@ const App = () => {
   const [currentStyle, setCurrentStyle] = useState('satellite');
 
   // Vision Features State
+  const [isAbmEnabled, setIsAbmEnabled] = useState(false);
+  const [isTrafficEnabled, setIsTrafficEnabled] = useState(false);
+  const [isWeatherEnabled, setIsWeatherEnabled] = useState(false);
   const [floodLevel, setFloodLevel] = useState(0);
   const [timelineYear, setTimelineYear] = useState(2024);
   const [isXrayEnabled, setIsXrayEnabled] = useState(false);
@@ -52,6 +56,35 @@ const App = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [reports, setReports] = useState([]);
   const [showReportingHint, setShowReportingHint] = useState(false);
+  const [showAiAdvisor, setShowAiAdvisor] = useState(false);
+  const [isAssetDeploymentMode, setIsAssetDeploymentMode] = useState(false);
+  const assetModeRef = useRef(false);
+  const trafficMarkers = useRef([]);
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [aiResponse, setAiResponse] = useState('');
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  
+  useEffect(() => { assetModeRef.current = isAssetDeploymentMode; }, [isAssetDeploymentMode]);
+
+  const fetchLogs = async () => {
+    try {
+      const res = await axios.get('http://localhost:3001/api/logs');
+      if (res.data && Array.isArray(res.data.logs)) {
+        setActivityLogs(res.data.logs);
+      }
+    } catch(e) { console.error('Failed to fetch logs', e); }
+  };
+  
+  const logActivity = async (msg, type) => {
+    try {
+      const res = await axios.post('http://localhost:3001/api/log-activity', { msg, type });
+      if (res.data && Array.isArray(res.data.logs)) {
+        setActivityLogs(res.data.logs);
+      }
+    } catch(e) { console.error('Failed to log activity', e); }
+  };
+
+  useEffect(() => { fetchLogs(); }, []);
 
   useEffect(() => {
     if (map.current) return;
@@ -159,6 +192,20 @@ const App = () => {
       });
 
       map.current.on('click', (e) => {
+        // Asset Deployment
+        if (assetModeRef.current) {
+          axios.post('http://localhost:3001/api/deploy-asset', { lngLat: e.lngLat, type: 'Building' })
+            .then(res => {
+               const el = document.createElement('div');
+               el.innerHTML = '🏢';
+               el.style.fontSize = '24px';
+               el.style.filter = 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))';
+               new maplibregl.Marker({ element: el }).setLngLat(e.lngLat).addTo(map.current);
+               logActivity(`[DEPLOY] Asset placed at ${e.lngLat.lng.toFixed(2)}, ${e.lngLat.lat.toFixed(2)}`, 'info');
+            }).catch(console.error);
+          return;
+        }
+
         // Clear selection if clicking empty space
         const features = map.current.queryRenderedFeatures(e.point, { layers: ['3d-buildings'] });
         if (features.length === 0 && !showReportingHint) {
@@ -167,10 +214,12 @@ const App = () => {
         }
 
         if (showReportingHint) {
-          const newReport = { id: Date.now(), lngLat: e.lngLat, type: 'issue' };
-          setReports(prev => [...prev, newReport]);
-          setShowReportingHint(false);
-          new maplibregl.Marker({ color: '#ffa500' }).setLngLat(e.lngLat).addTo(map.current);
+          axios.post('http://localhost:3001/api/report-issue', { lngLat: e.lngLat })
+            .then(res => {
+               setReports(prev => [res.data, ...prev]);
+               setShowReportingHint(false);
+               new maplibregl.Marker({ color: '#ffa500' }).setLngLat(e.lngLat).addTo(map.current);
+            }).catch(console.error);
         }
       });
       
@@ -237,6 +286,40 @@ const App = () => {
     map.current.setLayoutProperty('emergency-route', 'visibility', isEmergencyActive ? 'visible' : 'none');
   }, [showHydrants, isEmergencyActive]);
 
+  // 6. Traffic & ABM Logic (Mock)
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+    if (isTrafficEnabled || isAbmEnabled) {
+      if (trafficMarkers.current.length === 0) {
+        for (let i = 0; i < 20; i++) {
+          const el = document.createElement('div');
+          el.className = 'agent-marker';
+          el.style.width = '8px'; el.style.height = '8px';
+          el.style.backgroundColor = isAbmEnabled ? '#ff00ff' : '#00ffff';
+          el.style.borderRadius = '50%';
+          el.style.boxShadow = `0 0 10px ${isAbmEnabled ? '#ff00ff' : '#00ffff'}`;
+          
+          const lng = 76.65 + (Math.random() * 0.02 - 0.01);
+          const lat = 12.30 + (Math.random() * 0.02 - 0.01);
+          const marker = new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map.current);
+          trafficMarkers.current.push({ marker, lng, lat, dLng: (Math.random()-0.5)*0.0005, dLat: (Math.random()-0.5)*0.0005 });
+        }
+      }
+      
+      const interval = setInterval(() => {
+        trafficMarkers.current.forEach(agent => {
+          agent.lng += agent.dLng;
+          agent.lat += agent.dLat;
+          agent.marker.setLngLat([agent.lng, agent.lat]);
+        });
+      }, 100);
+      return () => clearInterval(interval);
+    } else {
+      trafficMarkers.current.forEach(a => a.marker.remove());
+      trafficMarkers.current = [];
+    }
+  }, [isTrafficEnabled, isAbmEnabled, mapLoaded]);
+
   // --- ACTIONS ---
   const handleSearch = async (e) => {
     if (e.key !== 'Enter' || !searchQuery.trim()) return;
@@ -250,24 +333,17 @@ const App = () => {
     setIsSearching(false);
   };
 
-  const handleDemolish = () => {
+  const handleDemolish = async () => {
     if (!selectedBuilding) return;
-    
-    // Simulating backend heuristic analysis locally
-    const utilities = ['Electricity', 'Water', 'Gas'];
-    const utilitiesCut = utilities.filter(() => Math.random() > 0.4);
-    if (utilitiesCut.length === 0) utilitiesCut.push('Electricity'); // Ensure at least one
-
-    const householdImpact = Math.floor(Math.random() * 250) + 40;
-    const trafficDelayMinutes = Math.floor(Math.random() * 20) + 5;
-    
     setDemolishedId(selectedBuilding.id);
-    setImpactData({
-      utilitiesCut,
-      impactedHouseholds: householdImpact,
-      trafficDelay: `+${trafficDelayMinutes} mins`,
-      suggestedReroute: 'Reroute via Outer Ring Road, Mysuru'
-    });
+    logActivity(`[SIMULATION] Initiating Demolish Impact Audit for ${selectedBuilding.name}`, 'warning');
+    try {
+      const res = await axios.post('http://localhost:3001/api/analyze-impact', { demolishedBuilding: selectedBuilding });
+      setImpactData({
+        ...res.data,
+        trafficDelay: `+${res.data.trafficDelayMinutes} mins`
+      });
+    } catch(e) { console.error(e); }
   };
 
   const openStreetView = () => {
@@ -275,8 +351,44 @@ const App = () => {
     window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${selectedBuilding.lngLat.lat},${selectedBuilding.lngLat.lng}`, '_blank');
   };
 
+  const openAiAdvisor = async () => {
+    setShowAiAdvisor(true);
+    setAiResponse('');
+    setIsAiLoading(true);
+    try {
+      const res = await axios.post('http://localhost:3001/api/ai-advisor', { floodLevel, aqiEnabled });
+      setAiResponse(res.data.message);
+    } catch(e) { console.error(e); }
+    setIsAiLoading(false);
+  };
+
   return (
     <div className="app-root">
+      {isWeatherEnabled && <div className="weather-overlay"></div>}
+      
+      {showAiAdvisor && (
+        <div className="modal-overlay" onClick={() => setShowAiAdvisor(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3><AlertTriangle size={20}/> Nexus AI Policy Advisor</h3>
+              <button className="close-btn" onClick={() => setShowAiAdvisor(false)}><X size={20}/></button>
+            </div>
+            <div className="ai-chat-area">
+              <p><strong>System:</strong> Executing contextual spatial query...</p>
+              {isAiLoading ? (
+                 <p><strong>AI:</strong> <Loader2 className="spin" size={14}/> Generating strategic policy...</p>
+              ) : (
+                 <p><strong>AI:</strong> {aiResponse}</p>
+              )}
+            </div>
+            <div className="ai-input-group">
+              <input type="text" placeholder="Ask AI about city policies or crisis management..." />
+              <button>Ask</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {!mapLoaded && (
         <div className="preloader">
           <div className="preloader-content">
@@ -314,28 +426,59 @@ const App = () => {
         </button>
       </div>
 
-      {/* SIDE PANEL */}
       <div className="side-panel">
         <div className="panel-header" onClick={() => setSelectedBuilding(null)}>
-          <Building2 size={28} className="icon-main" />
-          <div>
-            <h2>Policy Simulation Shell</h2>
-            <span className="panel-subtitle">Integrated Impact Engine v3.0</span>
+          <div className="mode-switcher" onClick={e => e.stopPropagation()}>
+            <button className={`mode-btn ${systemMode === 'admin' ? 'active' : ''}`} onClick={() => {setSystemMode('admin'); setActiveTab('missions');}}>Admin Nexus</button>
+            <button className={`mode-btn ${systemMode === 'citizen' ? 'active' : ''}`} onClick={() => {setSystemMode('citizen'); setActiveTab('observatory');}}>Citizen Nexus</button>
+          </div>
+          <div className="header-title-row">
+            <Building2 size={28} className="icon-main" />
+            <div>
+              <h2>{systemMode === 'admin' ? 'Strategic Command' : 'Public Observatory'}</h2>
+              <span className="panel-subtitle">Nexus Twin v3.0 | {systemMode === 'admin' ? 'Admin Access' : 'Read-Only'}</span>
+            </div>
           </div>
         </div>
 
         {/* CATEGORY TABS */}
         <div className="panel-tabs">
-          <button className={`tab-btn ${activeTab === 'missions' ? 'active' : ''}`} onClick={() => setActiveTab('missions')} title="Zoning Simulations"><Zap size={16}/><span>Zoning</span></button>
-          <button className={`tab-btn ${activeTab === 'crisis' ? 'active' : ''}`} onClick={() => setActiveTab('crisis')} title="Resilience Policies"><AlertTriangle size={16}/><span>Resilience</span></button>
-          <button className={`tab-btn ${activeTab === 'eco' ? 'active' : ''}`} onClick={() => setActiveTab('eco')} title="Climate Metrics"><Leaf size={16}/><span>Climate</span></button>
-          <button className={`tab-btn ${activeTab === 'heritage' ? 'active' : ''}`} onClick={() => setActiveTab('heritage')} title="Heritage Preservation"><History size={16}/><span>Preservation</span></button>
-          <button className={`tab-btn ${activeTab === 'social' ? 'active' : ''}`} onClick={() => setActiveTab('social')} title="Public Engagement"><MessageSquare size={16}/><span>Public</span></button>
+          {systemMode === 'admin' ? (
+            <>
+              <button className={`tab-btn ${activeTab === 'missions' ? 'active' : ''}`} onClick={() => setActiveTab('missions')} title="Zoning Simulations"><Zap size={16}/><span>Zoning</span></button>
+              <button className={`tab-btn ${activeTab === 'crisis' ? 'active' : ''}`} onClick={() => setActiveTab('crisis')} title="Resilience Policies"><AlertTriangle size={16}/><span>Resilience</span></button>
+              <button className={`tab-btn ${activeTab === 'eco' ? 'active' : ''}`} onClick={() => setActiveTab('eco')} title="Climate Metrics"><Leaf size={16}/><span>Climate</span></button>
+              <button className={`tab-btn ${activeTab === 'heritage' ? 'active' : ''}`} onClick={() => setActiveTab('heritage')} title="Heritage Preservation"><History size={16}/><span>Heritage</span></button>
+              <button className={`tab-btn ${activeTab === 'social' ? 'active' : ''}`} onClick={() => setActiveTab('social')} title="Public Engagement"><MessageSquare size={16}/><span>Social</span></button>
+            </>
+          ) : (
+            <>
+              <button className={`tab-btn ${activeTab === 'observatory' ? 'active' : ''}`} onClick={() => setActiveTab('observatory')} title="Urban Observatory"><Eye size={16}/><span>Observe</span></button>
+              <button className={`tab-btn ${activeTab === 'crisis' ? 'active' : ''}`} onClick={() => setActiveTab('crisis')} title="Safety Simulator"><AlertTriangle size={16}/><span>Safety</span></button>
+              <button className={`tab-btn ${activeTab === 'eco' ? 'active' : ''}`} onClick={() => setActiveTab('eco')} title="Environment HUD"><Leaf size={16}/><span>Environment</span></button>
+              <button className={`tab-btn ${activeTab === 'heritage' ? 'active' : ''}`} onClick={() => setActiveTab('heritage')} title="Timeline"><History size={16}/><span>Timeline</span></button>
+              <button className={`tab-btn ${activeTab === 'social' ? 'active' : ''}`} onClick={() => setActiveTab('social')} title="Report Issues"><MessageSquare size={16}/><span>Report</span></button>
+            </>
+          )}
         </div>
 
         <div className="scroll-area">
-          {activeTab === 'missions' && (
+          {activeTab === 'missions' && systemMode === 'admin' && (
             <div className="panel-section">
+              <label className="section-label">Agent & Asset Deployment</label>
+              <div className="toggle-row">
+                <span>Agent-Based Simulation (ABM)</span>
+                <button className={`toggle-sm ${isAbmEnabled ? 'on' : ''}`} onClick={() => { setIsAbmEnabled(!isAbmEnabled); logActivity(`[ABM] Engine ${!isAbmEnabled ? 'Online' : 'Offline'}`, 'info'); }} />
+              </div>
+              <div className="toggle-row">
+                <span>Deck.gl TripsLayer (Traffic Flow)</span>
+                <button className={`toggle-sm ${isTrafficEnabled ? 'on' : ''}`} onClick={() => { setIsTrafficEnabled(!isTrafficEnabled); logActivity(`[TRAFFIC] TripsLayer ${!isTrafficEnabled ? 'Enabled' : 'Disabled'}`, 'info'); }} />
+              </div>
+              <button className={`demolish-toggle ${isAssetDeploymentMode ? 'active' : ''}`} onClick={() => { setIsAssetDeploymentMode(!isAssetDeploymentMode); logActivity(`[ASSET] Deployment Mode ${!isAssetDeploymentMode ? 'Active' : 'Inactive'}`, 'warning'); }}>
+                <Building2 size={18} /> {isAssetDeploymentMode ? 'Cancel Deployment' : "'The Sims' Asset Deployment"}
+              </button>
+
+              <label className="section-label" style={{marginTop: '16px'}}>Impact Audit Simulation</label>
               <button 
                 className={`demolish-toggle ${isDemolishMode ? 'active' : ''}`} 
                 onClick={() => {
@@ -410,6 +553,10 @@ const App = () => {
                 <span>Vegetation Health Index</span>
                 <button className={`toggle-sm ${greenEnabled ? 'on' : ''}`} onClick={() => setGreenEnabled(!greenEnabled)} />
               </div>
+              <div className="toggle-row">
+                <span>Atmospheric Weather Engine</span>
+                <button className={`toggle-sm ${isWeatherEnabled ? 'on' : ''}`} onClick={() => setIsWeatherEnabled(!isWeatherEnabled)} />
+              </div>
               {greenEnabled && <div className="stat-box">City Sustainability Score: <strong>A+ (8.2/10)</strong></div>}
             </div>
           )}
@@ -428,8 +575,41 @@ const App = () => {
             </div>
           )}
 
-          {activeTab === 'social' && (
+          {activeTab === 'observatory' && systemMode === 'citizen' && (
+            <div className="panel-section">
+              <label className="section-label">Public Urban Observatory</label>
+              <p className="hint-text" style={{marginBottom: '16px'}}>Welcome to the Citizen Shell. Read-only 3D view of city infrastructure.</p>
+              
+              <div className="toggle-row">
+                <span>Live Traffic Pulse</span>
+                <button className={`toggle-sm ${isTrafficEnabled ? 'on' : ''}`} onClick={() => setIsTrafficEnabled(!isTrafficEnabled)} />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'social' && systemMode === 'admin' && (
             <div className="panel-section social-panel">
+              <label className="section-label">Social Sentiment & Activity</label>
+              <button className="action-btn wide" onClick={openAiAdvisor}>
+                 <MessageSquare size={18} /> Open AI Policy Advisor
+              </button>
+              <div className="toggle-row" style={{marginTop: '12px'}}>
+                <span>Citizen Mood Heatmap (Aggregated)</span>
+                <button className={`toggle-sm`} onClick={() => logActivity('[SYSTEM] Mood Heatmap Toggled', 'info')} />
+              </div>
+              
+              <label className="section-label" style={{marginTop: '16px'}}>Strategic Activity Log</label>
+              <div className="report-list" style={{fontFamily: 'monospace', fontSize: '0.75rem'}}>
+                {(activityLogs || []).map((log, idx) => (
+                  <div key={idx} className={`report-item ${log.type === 'warning' ? 'yellow' : ''}`}>{log.msg}</div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'social' && systemMode === 'citizen' && (
+            <div className="panel-section social-panel">
+              <label className="section-label">Crowdsourced Issue Reporting</label>
               <button 
                 className={`action-btn wide ${showReportingHint ? 'active' : ''}`}
                 onClick={() => setShowReportingHint(true)}
@@ -443,22 +623,41 @@ const App = () => {
                   <div key={r.id} className="report-item yellow">⚠️ New Report (Pending)</div>
                 ))}
               </div>
+              <div className="toggle-row" style={{marginTop: '16px'}}>
+                <span>View Public Mood Heatmap</span>
+                <button className={`toggle-sm`} onClick={() => {}} />
+              </div>
             </div>
           )}
         </div>
 
-        <div className="panel-section monitor-section">
-          <div className="compliance-bar">
-            <span>Overall Policy Compliance</span>
-            <strong>{floodLevel > 5 || aqiEnabled ? '74%' : '92%'}</strong>
+        {systemMode === 'admin' ? (
+          <div className="panel-section monitor-section">
+            <label className="section-label" style={{marginBottom: '8px', fontSize: '0.65rem'}}>Triple Win Scorecard</label>
+            <div className="compliance-bar">
+              <span>Economic Score</span><strong>88%</strong>
+            </div>
+            <div className="compliance-bar">
+              <span>Social Score</span><strong>92%</strong>
+            </div>
+            <div className="compliance-bar" style={{marginBottom: '12px'}}>
+              <span>Environmental Score</span><strong>{floodLevel > 5 || aqiEnabled ? '74%' : '92%'}</strong>
+            </div>
+            <div className="status-indicator">
+              <div className="dot" style={{ background: floodLevel > 8 ? '#ff3b3b' : '#00d084' }} />
+              <span>System Health: {floodLevel > 8 ? 'Critical' : 'Optimal'}</span>
+            </div>
           </div>
-          <div className="status-indicator">
-            <div className="dot" style={{ background: floodLevel > 8 ? '#ff3b3b' : '#00d084' }} />
-            <span>System Health: {floodLevel > 8 ? 'Critical Threshold' : 'Optimal Policy Range'}</span>
+        ) : (
+          <div className="panel-section monitor-section">
+            <div className="status-indicator">
+              <div className="dot" style={{ background: '#00d084' }} />
+              <span>Minimalist Governance Interface | Active</span>
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="panel-footer">Integrated Policy Pulse Shell v3.0 | Mysore 2026</div>
+        <div className="panel-footer">Nexus Twin v3.0 | Bengaluru 2026</div>
       </div>
     </div>
   );
