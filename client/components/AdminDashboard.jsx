@@ -110,6 +110,7 @@ const AdminDashboard = () => {
   const [isRainy, setIsRainy] = useState(false);
   const [smogLevel, setSmogLevel] = useState(0.1);
   const [isGridLocked, setIsGridLocked] = useState(false);
+  const [showGodMode, setShowGodMode] = useState(false);
   const [showReportingHint, setShowReportingHint] = useState(false);
   
   // --- NEW ADVANCED FEATURES STATES ---
@@ -308,7 +309,7 @@ const AdminDashboard = () => {
 
         // Atmospheric impact on speed
         if (isRainy) effectiveSpeed *= 0.6;
-        if (isGridLocked) effectiveSpeed = 0; // Total paralysis
+        if (isGridLocked && !godMode) effectiveSpeed = 0; // Total paralysis (unless God Mode active)
 
         progress += effectiveSpeed;
         if (progress >= 1) { 
