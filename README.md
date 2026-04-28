@@ -1,118 +1,87 @@
-# 🏛️ Mysuru 3D Digital Twin: Integrated Command Shell v3.0
+# 🏙️ Bengaluru Nexus: 3D Digital Twin Command Center v4.2
 
 ![Banner](./assets/banner.png)
 
-[![Project Status](https://img.shields.io/badge/Deployment-INTEGRATED-00bcd4?style=for-the-badge&logoColor=white)](https://github.com/bharathkumar000/smart-city-clone)
-[![Engine Status](https://img.shields.io/badge/Sim--Engine-OPERATIONAL-4caf50?style=for-the-badge&logoColor=white)](https://github.com/bharathkumar000/smart-city-clone)
-[![GIS Level](https://img.shields.io/badge/GIS_Layer-3D--ACTIVE-ff9800?style=for-the-badge&logoColor=white)](https://github.com/bharathkumar000/smart-city-clone)
-[![Environment](https://img.shields.io/badge/Env-PROD--READY-e91e63?style=for-the-badge&logoColor=white)](https://github.com/bharathkumar000/smart-city-clone)
+## 📡 PROJECT OVERVIEW
+**Bengaluru Nexus** is a state-of-the-art, high-fidelity urban simulation and management platform. Designed as a "God Mode" interface for the Silicon Valley of India, it synthesizes real-world geospatial data, 3D architectural footprints, and critical utility infrastructure into an immersive, browser-based integrated command center.
 
-> *"The future of urban governance is not in papers, but in pixels."* — **Global Urban Planning Initiative**
-
-**Mysuru 3D Digital Twin** is a high-fidelity, interactive urban planning and management platform designed for the **Heritage City of Mysuru**. This integrated command center synthesizes real-world geospatial data, 3D building architectural footprints, and critical utility infrastructure into a single, immersive glassmorphic interface.
+Built for urban planners, emergency responders, and policy makers, the platform leverages advanced GIS technologies and Agent-Based Modeling (ABM) to provide deep insights into infrastructure resilience, environmental health, and citizen sentiment.
 
 ---
 
-## 📡 SYSTEM ARCHITECTURE
+## 🛠️ Technical Architecture
 
-Our unified command-shell architecture ensures seamless synchronization between the 3D GIS viewport and the analytical backend engine.
+The platform is built on a high-performance geospatial stack designed for real-time 3D urban simulation.
 
-```mermaid
-graph TD
-    A[Client: React + MapLibre/Deck.gl] <--> B[Unified Command Shell HUD]
-    B <--> C{Heuristic Analysis Engine}
-    C --> D[(GeoJSON Data: Buildings & Utilities)]
-    C --> E[OpenStreetMap/Nominatim API]
-    C --> F[Impact Simulation Backend]
-    F --> G[Traffic, Utility, Household Impact Reports]
-```
-
----
-
-## 🛠️ CORE MODULES (The 5-Tab Command Center)
-
-### ⚡ 1. ADMIN MISSIONS (Urban Management)
-*   **🏗️ Demolish Analysis**: A revolutionary "What-If" planning tool. Execute a simulated demolition to instantly generate a **Live Impact Report**, calculating affected households, traffic lag, and utility service disruptions.
-*   **📸 Street View Integration**: Instant teleportation to ground-level Google Street View for any selected 3D structure.
-*   **📍 Spatial HUD**: Real-time metadata display for building heights, structural types, and historical relevance.
-
-### 🌊 2. CRISIS SIMULATOR (Emergency Response)
-*   **🌊 Dynamic Flood Overlays**: Simulate rainfall scenarios with a 0-15m inundation slider. Watch as the city color-codes buildings based on critical depth levels.
-*   **🚒 Fire Hydrant Network**: Instant visualization of fire hydrants across the urban fabric for rapid firefighting deployment.
-*   **🚑 EMS Optimal Routing**: Plot and visualize emergency vehicle paths during crisis states with dynamic road network analysis.
-
-### 🌿 3. ECO-TRACE (Environmental Health)
-*   **🌫️ AQI Heatmapping**: Real-time heatmap visualization of the Air Quality Index (AQI) across different sectors.
-*   **🍃 Green Index (VHI)**: Toggle the Vegetation Health Index layer to monitor the city's green cover and sustainability scores.
-*   **📊 Sustainability Score**: Automated city-wide health scoring based on green index and pollution data.
-
-### ⏳ 4. HERITAGE TIMELINE (Historical Evolution)
-*   **📜 Temporal Slider (1920 - 2024)**: Travel through time. Visualize the city sprawl with custom sepia-filtered historical map overlays.
-*   **🏰 Landmark Dossier**: Deep-dive into heritage sites like the **Amba Vilas Palace** with embedded architectural documentation and galleries.
-
-### 💬 5. SOCIAL RADAR (Citizen Engagement)
-*   **📝 Citizen HUD**: A map-integrated reporting system for public infrastructure issues (streetlights, potholes, etc.).
-*   **📍 Spatial Verification**: Users can pin reports directly to the 3D map for precise location verification by city officials.
+| Component | Technology | Role |
+| :--- | :--- | :--- |
+| **Core Rendering** | **MapLibre GL JS** | Open-source, WebGL-based engine for hardware-accelerated 3D extrusions and spatial repaints. |
+| **Base Layers** | **Google Maps Raster** | Direct XYZ raster tile integration for photorealistic satellite and street-level imagery. |
+| **Spatial Data** | **GeoJSON** | Industry-standard format for city infrastructure (buildings, utilities, hydrants). |
+| **Frontend** | **Next.js + Vite** | React-driven lifecycle management for instant canvas updates and state synchronization. |
+| **Backend** | **Node.js + Express** | High-concurrency API for logging spatial interactions and predictive failure analysis. |
+| **AI Engine** | **Ollama (Gemma 4)** | Local LLM integration for policy auditing and strategic directives. |
 
 ---
 
-## 🕵️ VISION LAYERS & NAVIGATION
+## 🚀 Advanced Command Features (v4.2)
 
-*   **🦴 X-Ray Mode (Underground)**: Peel back the city's surface to reveal the "Vascular System"—Electricity lines (Orange), Water pipes (Blue), and Gas mains (Red).
-*   **🛰️ Multi-Spectral Styles**: Toggle between High-Res Satellite imagery and clean Vector Street maps.
-*   **🛸 Fly-To Search**: A global search engine powered by OSM for instant landmark navigation.
+### **1. 📊 STRATEGY**
+- **Impact Score**: Real-time normalization of economic, social, and environmental metrics.
+- **AI "Suggest Best Plan"**: Local LLM-powered (Gemma 4) tactical directives based on live city telemetry.
+- **Time Travel Horizon**: Visualize city evolution from 2020 (Historical) to 2030 (Predicted).
+
+### **2. 🤖 DIRECTIVES**
+- **Nexus AI Advisor**: Professional-grade urban policy auditing and fiscal reporting using `gemma4:e4b`.
+- **Strategic Broadcast**: City-wide deployment of governance directives and emergency alerts.
+
+### **3. 🏗️ BUILDER**
+- **Architectural Construction Hub**: High-fidelity asset placement (Buildings, Transport, Energy).
+- **Conflict Resolver**: Real-time spatial overlap detection between new developments and existing infrastructure.
+
+### **4. 🚨 CRISIS**
+- **3D Flood Simulator**: Interactive monsoon inundation modeling with building-level risk markers.
+- **EMS Deployment**: Real-time emergency routing and fire hydrant mapping.
+
+### **5. 🌐 SOCIAL**
+- **Citizen Sentiment Pulse**: Real-time social telemetry analysis to visualize public mood.
+- **Smart Risk Zones**: Autonomous AI-detection of high-stress utility and congestion points.
 
 ---
 
-## 💻 TECHNICAL STACK
-
-| Layer | Technologies |
-| :--- | :--- |
-| **Frontend** | React.js, Vite, Framer Motion |
-| **Mapping** | MapLibre GL, Deck.gl, GeoJSON |
-| **Analysis** | Integrated Local Heuristic Engine |
-| **Styling** | Vanilla CSS (Glassmorphism), Lucide Icons |
-| **Geospatial** | OSM Nominatim API, Map Styles (Google/Maptiler) |
+## ⚡ ADMINISTRATIVE "GOD MODE"
+*   **Global Grid Lock**: Instant Traffic Paralysis simulation for emergency drill testing.
+*   **Atmospheric Control**: Real-time Rainfall and Smog density toggles that affect agent behavior.
+*   **Chain Reaction Visualizer**: Pulsing ripple effects showing the spatial impact of new urban developments.
 
 ---
 
-## ⚙️ INSTALLATION & DEPLOYMENT
+## ⚙️ INSTALLATION & RUNNING
 
 ### Prerequisites
-- Node.js (v18+)
-- npm / yarn
+*   Node.js (v18+)
+*   Ollama (with `gemma4:e4b` model downloaded)
 
 ### 1. Project Initialization
 ```bash
-npm install
-cd client && npm install
+# Install all dependencies (Client & Server)
+npm run install:all
 ```
 
-### 2. Launch Universal Interface
+### 2. Launch Development Environment
 ```bash
+# Start both Server (3001) and Client (9000)
 npm run dev
 ```
-- **🌐 Dashboard**: [http://localhost:5173](http://localhost:5173)
+*   **🏙️ Admin Nexus**: [http://localhost:9000/admin](http://localhost:9000/admin)
+*   **📡 Analysis Service**: [http://localhost:3001/api](http://localhost:3001/api)
 
 ---
 
-## 📂 PROJECT TAXONOMY
-
-```bash
-├── client/          # Vite + React 3D Interface
-│   ├── src/        # HUD Components & Integrated Logic
-│   └── public/     # Static GIS Assets (Buildings, Utilities)
-├── data/            # Local GeoJSON datasets (Mysuru City Data)
-└── assets/          # Digital Identity, Banners & Icons
-```
+## 👤 AUTHOR
+**Bharath Kumara**
+*   *Digital Twin Architect & Geospatial Engineer*
 
 ---
 
-## 👤 AUTHOR & LEAD ENGINEER
-
-**Bharath Kumara**  
-*Lead GIS Engineer & Digital Twin Architect*  
-
----
-
-> This project is a contribution to the **Digital India / Smart Cities Mission**. For collaborators: please follow the standard PR workflow and ensure all 3D layers are optimized for WebGL.
+> *"The future of urban governance is not in papers, but in pixels."* - **BENGALURU NEXUS CMD v4.2**
