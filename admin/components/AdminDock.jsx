@@ -10,6 +10,7 @@ const AdminDock = ({
   currentStyle, 
   setCurrentStyle, 
   handleLogout,
+  setIsSidebarCollapsed,
   isSplitScreen,
   setIsSplitScreen,
   activeSmartZones,
@@ -22,7 +23,10 @@ const AdminDock = ({
           <button 
             key={id} 
             className={`dock-btn ${activeCategory === id ? 'active' : ''}`} 
-            onClick={() => setActiveCategory(activeCategory === id ? null : id)}
+            onClick={() => {
+              setActiveCategory(activeCategory === id ? null : id);
+              setIsSidebarCollapsed(false);
+            }}
           >
             <cat.icon size={18} />
             <span>{cat.label}</span>

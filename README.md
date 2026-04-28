@@ -1,51 +1,50 @@
-# 🏙️ Bengaluru Nexus: 3D Digital Twin Command Center v4.2
+# 🏙️ Bengaluru Nexus: 3D Digital Twin Command Center v5.0
 
 ![Banner](./assets/banner.png)
 
 ## 📡 PROJECT OVERVIEW
-**Bengaluru Nexus** is a state-of-the-art, high-fidelity urban simulation and management platform. Designed as a "God Mode" interface for the Silicon Valley of India, it synthesizes real-world geospatial data, 3D architectural footprints, and critical utility infrastructure into an immersive, browser-based integrated command center.
+**Bengaluru Nexus** is a professional-grade urban simulation and spatial governance platform. Designed as a high-fidelity "Cyber-SOC" interface for Bengaluru, it synthesizes real-world geospatial data, 3D architectural footprints, and critical utility infrastructure into a unified digital twin.
 
-Built for urban planners, emergency responders, and policy makers, the platform leverages advanced GIS technologies and Agent-Based Modeling (ABM) to provide deep insights into infrastructure resilience, environmental health, and citizen sentiment.
+Built for urban planners and policy makers, the platform leverages **Supabase + PostGIS** for managed spatial storage and **Next.js 16.2.4** for high-performance city-wide visualization.
 
 ---
 
-## 🛠️ Technical Architecture
-
-The platform is built on a high-performance geospatial stack designed for real-time 3D urban simulation.
+## 🏗️ System Architecture
+The project follows a **Domain-Driven Modular** structure, separating the platform into specialized portals while maintaining a unified core.
 
 | Component | Technology | Role |
 | :--- | :--- | :--- |
-| **Core Rendering** | **MapLibre GL JS** | Open-source, WebGL-based engine for hardware-accelerated 3D extrusions and spatial repaints. |
-| **Base Layers** | **Google Maps Raster** | Direct XYZ raster tile integration for photorealistic satellite and street-level imagery. |
-| **Spatial Data** | **GeoJSON** | Industry-standard format for city infrastructure (buildings, utilities, hydrants). |
-| **Frontend** | **Next.js + Vite** | React-driven lifecycle management for instant canvas updates and state synchronization. |
-| **Backend** | **Node.js + Express** | High-concurrency API for logging spatial interactions and predictive failure analysis. |
-| **AI Engine** | **Ollama (Gemma 4)** | Local LLM integration for policy auditing and strategic directives. |
+| **Core Rendering** | **MapLibre + Deck.gl** | WebGL-accelerated 3D urban rendering and spatial layers. |
+| **Database** | **Supabase / PostGIS** | Managed cloud storage for city assets and geospatial analysis. |
+| **Frontend** | **Next.js 16 (Turbopack)** | High-performance dashboard lifecycle and routing. |
+| **Simulation** | **Custom ABM Engine** | Agent-Based Modeling for real-time traffic and citizen behavior. |
+| **AI Advisor** | **Ollama (Gemma 4)** | Professional urban policy auditing and strategic reporting. |
+
+> [!NOTE]
+> For a deep dive into the internal data flow and directory structure, see [SYSTEM_ARCHITECTURE.md](./SYSTEM_ARCHITECTURE.md).
 
 ---
 
-## 🚀 Advanced Command Features (v4.2)
+---
 
-### **1. 📊 STRATEGY**
-- **Impact Score**: Real-time normalization of economic, social, and environmental metrics.
-- **AI "Suggest Best Plan"**: Local LLM-powered (Gemma 4) tactical directives based on live city telemetry.
-- **Time Travel Horizon**: Visualize city evolution from 2020 (Historical) to 2030 (Predicted).
+## 🚀 Advanced Command Features (v5.0)
 
-### **2. 🤖 DIRECTIVES**
-- **Nexus AI Advisor**: Professional-grade urban policy auditing and fiscal reporting using `gemma4:e4b`.
-- **Strategic Broadcast**: City-wide deployment of governance directives and emergency alerts.
+### **1. 🏗️ ARCHITECTURAL BUILDER**
+- **Adaptive Command Hub**: High-fidelity asset placement (Metros, Highways, Skyscrapers, Medical Centers).
+- **Intelligent Sidebar**: State-aware UI that expands for selection and auto-collapses for focus.
+- **Impact Visualizer**: Real-time conflict detection with existing utility infrastructure.
 
-### **3. 🏗️ BUILDER**
-- **Architectural Construction Hub**: High-fidelity asset placement (Buildings, Transport, Energy).
-- **Conflict Resolver**: Real-time spatial overlap detection between new developments and existing infrastructure.
+### **2. 🤖 STRATEGIC DIRECTIVES**
+- **Nexus AI Advisor**: Professional urban policy auditing using `gemma4:e4b`.
+- **Global Broadcast**: Real-time deployment of city-wide governance alerts and incident reports.
 
-### **4. 🚨 CRISIS**
-- **3D Flood Simulator**: Interactive monsoon inundation modeling with building-level risk markers.
-- **EMS Deployment**: Real-time emergency routing and fire hydrant mapping.
+### **3. 🚨 CRISIS & SIMULATION**
+- **3D Flood Modeling**: Dynamic monsoon inundation tracking with real-time risk scoring.
+- **Agent Physics**: Real-time traffic and pedestrian modeling using a custom ABM engine.
 
-### **5. 🌐 SOCIAL**
-- **Citizen Sentiment Pulse**: Real-time social telemetry analysis to visualize public mood.
-- **Smart Risk Zones**: Autonomous AI-detection of high-stress utility and congestion points.
+### **4. 👥 CITIZEN ENGAGEMENT**
+- **Public Request Pulse**: Live tracking of citizen grievances (potholes, accidents) on the unified map.
+- **Sentiment Heatmaps**: WebGL-accelerated visualization of community feedback across Bengaluru wards.
 
 ---
 

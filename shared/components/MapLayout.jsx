@@ -29,6 +29,7 @@ const MapLayout = ({
           'infrastructure': { type: 'geojson', data: '/data/bengaluru_infrastructure.json' },
           'utilities': { type: 'geojson', data: '/data/bengaluru_utilities.json' }
         },
+        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
         layers: [
           { id: 'background', type: 'background', paint: { 'background-color': '#0a0b10' } },
           { id: 'hybrid-tiles', type: 'raster', source: 'google-hybrid', layout: { visibility: 'visible' } },
@@ -73,18 +74,29 @@ const MapLayout = ({
 
   useEffect(() => {
     if (!map.current) return;
-    const isSat = currentStyle === 'satellite';
-    const isHybrid = currentStyle === 'hybrid';
-    const isStreets = currentStyle === 'streets';
 
-    if (map.current.getLayer('satellite-tiles')) map.current.setLayoutProperty('satellite-tiles', 'visibility', isSat ? 'visible' : 'none');
-    if (map.current.getLayer('hybrid-tiles')) map.current.setLayoutProperty('hybrid-tiles', 'visibility', isHybrid ? 'visible' : 'none');
-    if (map.current.getLayer('street-tiles')) map.current.setLayoutProperty('street-tiles', 'visibility', isStreets ? 'visible' : 'none');
-    
-    const targetLayer = isSat ? 'satellite-tiles' : (isHybrid ? 'hybrid-tiles' : 'street-tiles');
-    if (map.current.getLayer(targetLayer)) map.current.setPaintProperty(targetLayer, 'raster-opacity', isXrayEnabled ? 0.15 : 1);
-    if (map.current.getLayer('utility-pipes')) map.current.setPaintProperty('utility-pipes', 'line-opacity', isXrayEnabled ? 1 : 0);
-    if (map.current.getLayer('3d-buildings')) map.current.setPaintProperty('3d-buildings', 'fill-extrusion-opacity', isXrayEnabled ? 0.2 : 0.8);
+    const updateStyle = () => {
+      if (!map.current.isStyleLoaded()) return;
+
+      const isSat = currentStyle === 'satellite';
+      const isHybrid = currentStyle === 'hybrid';
+      const isStreets = currentStyle === 'streets';
+
+      if (map.current.getLayer('satellite-tiles')) map.current.setLayoutProperty('satellite-tiles', 'visibility', isSat ? 'visible' : 'none');
+      if (map.current.getLayer('hybrid-tiles')) map.current.setLayoutProperty('hybrid-tiles', 'visibility', isHybrid ? 'visible' : 'none');
+      if (map.current.getLayer('street-tiles')) map.current.setLayoutProperty('street-tiles', 'visibility', isStreets ? 'visible' : 'none');
+      
+      const targetLayer = isSat ? 'satellite-tiles' : (isHybrid ? 'hybrid-tiles' : 'street-tiles');
+      if (map.current.getLayer(targetLayer)) map.current.setPaintProperty(targetLayer, 'raster-opacity', isXrayEnabled ? 0.15 : 1);
+      if (map.current.getLayer('utility-pipes')) map.current.setPaintProperty('utility-pipes', 'line-opacity', isXrayEnabled ? 1 : 0);
+      if (map.current.getLayer('3d-buildings')) map.current.setPaintProperty('3d-buildings', 'fill-extrusion-opacity', isXrayEnabled ? 0.2 : 0.8);
+    };
+
+    if (map.current.isStyleLoaded()) {
+      updateStyle();
+    } else {
+      map.current.once('styledata', updateStyle);
+    }
   }, [currentStyle, isXrayEnabled]);
 
   return (

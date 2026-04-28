@@ -23,6 +23,14 @@ body {
   width: 100vw;
 }
 
+.app-root {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #0a0b10; /* Match map background */
+}
+
 /* --- THE NEURAL STRIP (SIDEBAR) --- */
 .side-panel {
   position: absolute;
@@ -169,7 +177,31 @@ body {
 }
 
 .side-panel.collapsed {
-  transform: translateX(calc(-100% - 2rem));
+  width: 8px;
+  background: linear-gradient(180deg, transparent, var(--accent), transparent);
+  padding: 0;
+  border-right: 1px solid var(--accent-glass);
+}
+
+.side-panel.collapsed > * {
+  opacity: 0;
+  transform: translateX(-40px);
+  pointer-events: none;
+}
+
+.side-panel.expanded {
+  width: 440px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(25px) saturate(180%);
+  padding: 1.5rem;
+  border-right: 1px solid var(--glass-border);
+  box-shadow: 20px 0 60px rgba(0, 0, 0, 0.05);
+}
+
+.side-panel.expanded > * {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: all;
 }
 
 .widget {
@@ -378,7 +410,13 @@ body {
 .view-btn.active { background: var(--accent); }
 
 /* --- MAP & OVERLAYS --- */
-.map-viewport { position: absolute; inset: 0; z-index: 1; }
+.map-viewport { 
+  position: absolute; 
+  inset: 0; 
+  z-index: 1; 
+  width: 100%; 
+  height: 100%; 
+}
 .deck-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
 
 /* --- BUTTONS --- */

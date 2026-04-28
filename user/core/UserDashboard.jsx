@@ -7,14 +7,14 @@ import { HeatmapLayer } from '@deck.gl/aggregation-layers';
 import { TripsLayer } from '@deck.gl/geo-layers';
 
 // SHARED
-import MapLayout from '../shared/components/MapLayout';
-import { updateAgents } from '../shared/utils/simulation';
-import { generateAgents } from '../shared/utils/agentGenerator';
+import MapLayout from '../../shared/components/MapLayout';
+import { updateAgents } from '../../shared/utils/simulation';
+import { generateAgents } from '../../shared/utils/agentGenerator';
 
 // USER SPECIFIC
-import UserSidebar from './components/UserSidebar';
-import UserDock from './components/UserDock';
-import NotificationBar from './components/NotificationBar';
+import UserSidebar from '../components/UserSidebar';
+import UserDock from '../components/UserDock';
+import NotificationBar from '../components/NotificationBar';
 
 const UserDashboard = () => {
   const router = useRouter();
@@ -41,12 +41,23 @@ const UserDashboard = () => {
   const [isSentimentLoading, setIsSentimentLoading] = useState(false);
   const [showNotifBar, setShowNotifBar] = useState(false);
   const [latestNotif, setLatestNotif] = useState(null);
+  const [publicRequests, setPublicRequests] = useState([]);
 
   const [viewState, setViewState] = useState({
     longitude: 77.5912, latitude: 12.9797, zoom: 14, pitch: 55, bearing: 0
   });
 
   const onWebGLInitialized = (gl) => { setGlContext(gl); setGraphicsReady(true); };
+
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        const res = await axios.get('http://localhost:3001/api/reports');
+        setPublicRequests(res.data);
+      } catch (err) { console.error("Request fetch failed", err); }
+    };
+    fetchRequests();
+  }, []);
 
   useEffect(() => {
     const fetchNotifs = async () => {
@@ -81,12 +92,17 @@ const UserDashboard = () => {
     new ScatterplotLayer({
       id: 'agent-layer', data: agents, getPosition: d => d.pos, getFillColor: [255, 204, 0], getRadius: 10, updateTriggers: { getPosition: [time] }
     }),
-    new TripsLayer({
-      id: 'trips-layer', data: agents, getPath: d => d.path.map(p => p.pos), getTimestamps: d => d.path.map(p => p.time), getColor: [255, 204, 0], trailLength: 12, currentTime: Date.now() / 1000
-    }),
     sentimentEnabled && sentimentData ? new HeatmapLayer({
       id: 'sentiment-heatmap', data: sentimentData.points, getPosition: d => d.coordinates, radiusPixels: 70, opacity: 0.6
-    }) : null
+    }) : null,
+    new ScatterplotLayer({
+      id: 'public-requests-layer',
+      data: publicRequests,
+      getPosition: d => [d.lngLat.lng, d.lngLat.lat],
+      getFillColor: [239, 68, 68],
+      getRadius: 15,
+      pickable: true
+    })
   ].filter(Boolean);
 
   const handleSearch = async (e) => {
