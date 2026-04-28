@@ -45,6 +45,53 @@ app.post('/api/analyze-impact', (req, res) => {
   res.json(results);
 });
 
+// AI Advisor Endpoint
+app.post('/api/ai-advisor', (req, res) => {
+  const { floodLevel, aqiEnabled } = req.body;
+  let response = "Based on current urban metrics, systems are nominal. Routine maintenance recommended.";
+  
+  if (floodLevel > 5) {
+    response = "CRITICAL: Flood level exceeds safe limits. Immediate activation of EMS routes and citizen evacuation in Zone B is required.";
+  } else if (aqiEnabled) {
+    response = "AQI sensors indicate elevated pollution. I recommend deploying temporary air purification towers and restricting heavy vehicle movement.";
+  }
+  
+  res.json({ message: response });
+});
+
+// Deploy Asset Endpoint
+app.post('/api/deploy-asset', (req, res) => {
+  const { lngLat, type } = req.body;
+  res.json({ success: true, message: `Successfully deployed ${type} at [${lngLat.lng.toFixed(4)}, ${lngLat.lat.toFixed(4)}]` });
+});
+
+// Report Issue Endpoint
+app.post('/api/report-issue', (req, res) => {
+  const { lngLat } = req.body;
+  const newReport = {
+    id: Date.now(),
+    lngLat,
+    status: 'Pending',
+    message: 'Citizen report logged.'
+  };
+  res.json(newReport);
+});
+
+// Activity Log Endpoint
+let logs = [
+  { id: 1, type: 'warning', msg: '[ALERT] High traffic detected at Ring Road' },
+  { id: 2, type: 'info', msg: '[INFO] EMS Unit 4 deployed to Palace' }
+];
+app.post('/api/log-activity', (req, res) => {
+  const { msg, type } = req.body;
+  logs.unshift({ id: Date.now(), msg, type: type || 'info' });
+  if(logs.length > 15) logs.pop();
+  res.json({ logs });
+});
+app.get('/api/logs', (req, res) => {
+  res.json({ logs });
+});
+
 const distPath = path.join(__dirname, '../client/dist');
 console.log(`Serving static files from: ${distPath}`);
 app.use(express.static(distPath));
