@@ -1,6 +1,6 @@
 'use client';
 import { useParams } from 'next/navigation';
-import LoginPage from '../../../../shared/LoginPage';
+import LoginPage from '../../../shared/LoginPage';
 
 export default function Login() {
   const params = useParams();
