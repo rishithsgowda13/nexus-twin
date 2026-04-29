@@ -209,12 +209,13 @@ body {
   padding: 1.5rem;
   border-right: 1px solid var(--glass-border);
   box-shadow: 20px 0 60px rgba(0, 0, 0, 0.05);
+  pointer-events: auto !important;
 }
 
 .side-panel.expanded > * {
-  opacity: 1;
-  transform: translateX(0);
-  pointer-events: all;
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+  pointer-events: auto !important;
 }
 
 .widget {

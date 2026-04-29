@@ -1,12 +1,13 @@
 import React from 'react';
-import { Globe, Leaf, ShieldAlert, History, Layers, LogOut } from 'lucide-react';
+import { Globe, Leaf, ShieldAlert, History, Layers, LogOut, MessageSquare } from 'lucide-react';
 
 const UserDock = ({ activeTab, setActiveTab, currentStyle, setCurrentStyle, handleLogout }) => {
   const tabs = [
     { id: 'social', icon: Globe, label: 'Mood' },
     { id: 'eco', icon: Leaf, label: 'Eco' },
-    { id: 'crisis', icon: ShieldAlert, label: 'Public Safety' },
-    { id: 'heritage', icon: History, label: 'Legacy' }
+    { id: 'crisis', icon: ShieldAlert, label: 'Safety' },
+    { id: 'heritage', icon: History, label: 'Legacy' },
+    { id: 'complaints', icon: MessageSquare, label: 'Report' }
   ];
 
   return (

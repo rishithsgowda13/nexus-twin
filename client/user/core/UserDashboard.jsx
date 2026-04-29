@@ -50,13 +50,19 @@ const UserDashboard = () => {
   const onWebGLInitialized = (gl) => { setGlContext(gl); setGraphicsReady(true); };
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchRequests = async () => {
       try {
-        const res = await axios.get('/api/reports');
+        const res = await axios.get('/api/reports', { signal: controller.signal });
         setPublicRequests(res.data);
-      } catch (err) { console.error("Request fetch failed", err); }
+      } catch (err) { 
+        if (err.name !== 'CanceledError' && err.name !== 'AbortError') {
+          console.error("Request fetch failed", err); 
+        }
+      }
     };
     fetchRequests();
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
@@ -87,21 +93,29 @@ const UserDashboard = () => {
   }, [viewState]);
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchNotifs = async () => {
       try {
-        const res = await axios.get('/api/notifications');
-        if (res.data.length > 0) {
+        const res = await axios.get('/api/notifications', { signal: controller.signal });
+        if (res.data && res.data.length > 0) {
           const newest = res.data[0];
           if (!latestNotif || newest.id !== latestNotif.id) {
             setLatestNotif(newest);
             setShowNotifBar(true);
           }
         }
-      } catch (err) { console.error("Notif fetch failed", err); }
+      } catch (err) { 
+        if (err.name !== 'CanceledError' && err.name !== 'AbortError') {
+          console.error("Notif fetch failed", err); 
+        }
+      }
     };
     fetchNotifs();
     const interval = setInterval(fetchNotifs, 5000);
-    return () => clearInterval(interval);
+    return () => {
+      controller.abort();
+      clearInterval(interval);
+    };
   }, [latestNotif]);
 
   useEffect(() => {
@@ -163,7 +177,14 @@ const UserDashboard = () => {
         </div>
       </div>
 
+      <UserDock 
+        activeTab={activeTab} setActiveTab={setActiveTab}
+        currentStyle={currentStyle} setCurrentStyle={setCurrentStyle}
+        handleLogout={handleLogout}
+      />
+
       <UserSidebar 
+        activeTab={activeTab}
         handleFetchSentiment={() => { setIsSentimentLoading(true); setTimeout(() => { setSentimentEnabled(true); setIsSentimentLoading(false); }, 1000); }} 
         isSentimentLoading={isSentimentLoading}
         aqiEnabled={aqiEnabled} setAqiEnabled={setAqiEnabled}
@@ -171,12 +192,6 @@ const UserDashboard = () => {
         floodLevel={floodLevel} setFloodLevel={setFloodLevel}
         isRainy={isRainy} setIsRainy={setIsRainy}
         timelineYear={timelineYear} setTimelineYear={setTimelineYear}
-      />
-
-      <UserDock 
-        activeTab={activeTab} setActiveTab={setActiveTab}
-        currentStyle={currentStyle} setCurrentStyle={setCurrentStyle}
-        handleLogout={handleLogout}
       />
     </div>
   );
