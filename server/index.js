@@ -128,16 +128,17 @@ app.use((req, res, next) => {
 // Policy Advisor (P.I.S.E. GPT) Endpoint with OLLAMA Integration
 app.post('/api/policy-advisor', async (req, res) => {
   const { query } = req.body;
+  console.log(`[POLICY ADVISOR] Received query: "${query}"`);
   
   if (!query) return res.status(400).json({ error: 'No query provided' });
 
   try {
     // Attempt to call local Ollama API
-    const ollamaResponse = await fetch('http://localhost:11434/api/generate', {
+    const ollamaResponse = await fetch('http://127.0.0.1:11434/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'gemma4:e4b',
+        model: 'gemma:2b',
         prompt: `You are the "Bengaluru Nexus Policy Advisor", a high-fidelity AI specialized in urban planning, fiscal analysis, and social engineering for the city of Bengaluru. 
         
         User Query: "${query}"
@@ -155,10 +156,13 @@ app.post('/api/policy-advisor', async (req, res) => {
 
     if (ollamaResponse.ok) {
       const data = await ollamaResponse.json();
+      console.log(`[POLICY ADVISOR] Ollama response received successfully.`);
       return res.json({ report: data.response });
+    } else {
+      console.warn(`[POLICY ADVISOR] Ollama returned status: ${ollamaResponse.status}`);
     }
   } catch (err) {
-    console.warn("Ollama not detected on localhost:11434. Falling back to mock simulation.");
+    console.warn(`[POLICY ADVISOR] Ollama connection failed: ${err.message}. Falling back to simulation.`);
   }
 
   // Simulation logic for LLM Analysis (Fallback)
@@ -191,10 +195,10 @@ app.post('/api/policy-advisor', async (req, res) => {
 
 #### 📊 INITIAL HEURISTICS
 - **Complexity Level**: Moderate
-- **Status**: Ollama Engine [gemma4:e4b] Offline.
+- **Status**: Ollama Engine [gemma:2b] Offline.
 
 #### 🔍 ADVISORY NOTE
-The SYNTH-GOV engine requires the local Ollama service to be active for high-fidelity analysis. Please ensure "ollama run gemma4:e4b" is available.
+The SYNTH-GOV engine requires the local Ollama service to be active for high-fidelity analysis. Please ensure "ollama run gemma:2b" is available.
     `;
   }
 
@@ -208,11 +212,11 @@ app.post('/api/ai-suggest', async (req, res) => {
   const { priority, assets } = req.body;
   
   try {
-    const ollamaResponse = await fetch('http://localhost:11434/api/generate', {
+    const ollamaResponse = await fetch('http://127.0.0.1:11434/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'gemma4:e4b',
+        model: 'gemma:2b',
         prompt: `You are the "Bengaluru Nexus Strategic AI". 
         Current Priority: ${priority.toUpperCase()}
         Current City Assets: ${JSON.stringify(assets)}
@@ -273,24 +277,63 @@ app.post('/api/predict-failures', (req, res) => {
 
 // Sentiment Analysis (X/News Data) Endpoint
 app.post('/api/sentiment', (req, res) => {
-  // Mock ward boundaries or just random points for heatmap
   const sentimentPoints = [];
   const numPoints = 100;
-
   for (let i = 0; i < numPoints; i++) {
-    const sentiment = Math.random() * 2 - 1; // Range -1 (Complaints) to 1 (Satisfied)
+    const sentiment = Math.random() * 2 - 1;
     sentimentPoints.push({
       id: i,
-      coordinates: [
-        76.62 + Math.random() * 0.06,
-        12.28 + Math.random() * 0.05
-      ],
-      sentiment: sentiment, // -1 to 1
-      intensity: Math.random() // How many people are talking
+      coordinates: [77.62 + Math.random() * 0.06, 12.98 + Math.random() * 0.05],
+      sentiment: sentiment,
+      intensity: Math.random()
     });
   }
-
   res.json({ points: sentimentPoints });
+});
+
+// Public Reports / Complaints System
+let reports = [
+  { id: 1, type: 'Road', status: 'Pending', location: 'MG Road', description: 'Large pothole near junction', lngLat: { lng: 77.60, lat: 12.97 } },
+  { id: 2, type: 'Water Pipeline', status: 'In Progress', location: 'Indiranagar', description: 'Pipe leakage on 12th Main', lngLat: { lng: 77.64, lat: 12.98 } }
+];
+
+app.get('/api/reports', async (req, res) => {
+  try {
+    if (db && db.query) {
+      const result = await db.query('SELECT * FROM reports ORDER BY created_at DESC');
+      if (result.rows.length > 0) return res.json(result.rows);
+    }
+  } catch (err) {
+    console.warn("DB reports fetch failed, using memory.");
+  }
+  res.json(reports);
+});
+
+app.post('/api/reports', async (req, res) => {
+  const { type, location, description, lngLat } = req.body;
+  const newReport = {
+    id: Date.now(),
+    type,
+    status: 'Pending',
+    location: location || 'Detected Location',
+    description,
+    lngLat: lngLat || { lng: 77.59 + Math.random() * 0.05, lat: 12.97 + Math.random() * 0.05 },
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    if (db && db.query) {
+      await db.query(
+        'INSERT INTO reports (type, location_name, description, lngLat, geom) VALUES ($1, $2, $3, $4, ST_SetSRID(ST_MakePoint($5, $6), 4326))',
+        [type, newReport.location, description, JSON.stringify(newReport.lngLat), newReport.lngLat.lng, newReport.lngLat.lat]
+      );
+    }
+  } catch (err) {
+    console.warn("DB report save failed, using memory.");
+  }
+
+  reports.unshift(newReport);
+  res.json({ success: true, report: newReport });
 });
 
 // Real-time Notification System
