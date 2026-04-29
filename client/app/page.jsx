@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import LoginPage from '../../shared/LoginPage';
+import LoginPage from '../shared/LoginPage';
 
 export default function Home() {
   const router = useRouter();
