@@ -81,3 +81,7 @@ env/
 # data/bengaluru_buildings.json
 # data/bengaluru_infrastructure.json
 # data/bengaluru_utilities.json
+
+# Large Binary Assets
+*.pdf
+*.pptx
